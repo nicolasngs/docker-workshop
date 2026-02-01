@@ -8,8 +8,8 @@ terraform {
 }
 
 provider "google" {
-  project = "project-f4bad27f-8327-43c7-b26"
-  region  = "europe-west9"
+  project = var.project
+  region  = var.location
 }
 
 # This data source gets a temporary token for the service account
@@ -24,15 +24,14 @@ data "google_service_account_access_token" "default" {
 provider "google" {
   alias        = "impersonated"
   access_token = data.google_service_account_access_token.default.access_token
-  project      = "project-f4bad27f-8327-43c7-b26"
-  region       = "europe-west9"
-  #zone         = var.zone
+  project      = var.project
+  region       = var.location
 }
 
 resource "google_storage_bucket" "demo-bucket" {
   provider      = google.impersonated
-  name          = "project-f4bad27f-8327-43c7-b26-terra-bucket"
-  location      = "EUROPE-WEST9"
+  name          = var.gcs_bucket_name
+  location      = var.location
   force_destroy = true
 
   uniform_bucket_level_access = true
@@ -45,4 +44,9 @@ resource "google_storage_bucket" "demo-bucket" {
       type = "AbortIncompleteMultipartUpload"
     }
   }
+}
+
+resource "google_bigquery_dataset" "demo_dataset" {
+  dataset_id = var.bq_dataset_name
+  location   = var.location
 }
